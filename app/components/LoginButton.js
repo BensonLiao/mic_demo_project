@@ -233,6 +233,7 @@ export default class LoginButton extends React.Component {
     this.setState({ login: false })
     let info = 'Please login to get the device info and data, thanks!'
     this.props.handleDeviceInfo(info, {})
+    this.props.clearMeasureData()
     this.props.closeWebsocket()
   }
 
