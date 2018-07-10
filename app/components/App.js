@@ -1,11 +1,11 @@
-import ReactDOM from 'react-dom'
-import Typography from 'material-ui/Typography'
-import Table  from 'material-ui/Table'
-import TableBody from 'material-ui/Table/TableBody'
-import TableCell from 'material-ui/Table/TableCell'
-import TableRow from 'material-ui/Table/TableRow'
-import update from 'immutability-helper'
+import ReactDOM from 'react-dom';
 import LoginButton from './LoginButton'
+import Typography from 'material-ui/Typography'
+import Table from 'material-ui/Table';
+import TableBody from 'material-ui/Table/TableBody';
+import TableCell from 'material-ui/Table/TableCell';
+import TableRow from 'material-ui/Table/TableRow';
+import update from 'immutability-helper'
 import DemoLineChart from './DemoLineChart'
 import Notify from './Notify'
 
@@ -57,8 +57,8 @@ export default class App extends React.Component {
     this.setState({ accessToken: myAccessToken, refreshToken: myRefreshToken })
   }
 
-  changeDeviceInfo = (info, deviceInfo) => {
-    console.log('changeDeviceInfo...')
+  updateDeviceInfo = (info, deviceInfo) => {
+    console.log('updateDeviceInfo...')
     this.setState({ info: info, deviceInfo: deviceInfo })
   }
 
@@ -91,7 +91,7 @@ export default class App extends React.Component {
     }
     mySocket.onmessage = function(e) {
       e.persist()
-      console.log('Receiving message require(the websocket server')
+      console.log('Receiving message from the websocket server')
       let data = JSON.parse(e.data)
       // console.log(data)
       if (data.action.indexOf('insert') != -1) {
@@ -107,7 +107,7 @@ export default class App extends React.Component {
     }
     mySocket.onerror = function(e) {
       e.persist()
-      console.log('ERROR require(the websocket server:')
+      console.log('ERROR from the websocket server:')
       console.log(e.data)
     }
   }
@@ -116,7 +116,7 @@ export default class App extends React.Component {
     console.log('closeWebsocket...')
     if (this.state.websocket) this.state.websocket.close()
   }
-  
+
   clearMeasureData = () => {
     console.log('clearMeasureData...')
     let { measureData } = this.state
@@ -179,7 +179,7 @@ export default class App extends React.Component {
           <LoginButton 
           setWebsocket={this.createWebsocket}
           setTokens={this.createTokens}
-          handleDeviceInfo={this.changeDeviceInfo} 
+          updateDeviceInfo={this.updateDeviceInfo} 
           closeWebsocket={this.closeWebsocket}
           clearMeasureData={this.clearMeasureData}
           updateMeasureData={this.updateMeasureData}/>
@@ -218,6 +218,7 @@ export default class App extends React.Component {
   }
 }
 
+ 
 if (document.getElementById('test_root')) {
   // console.log('root founded.');
   ReactDOM.render(<App />, document.getElementById('test_root'));
