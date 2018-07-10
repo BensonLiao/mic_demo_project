@@ -1,5 +1,25 @@
 import Button from 'material-ui/Button'
 
+var reqInstance = axios.create({
+  headers: {
+    common: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+  },
+  xsrfCookieName: null, //Remove the X-CSRF-TOKEN cookie from the instance
+  xsrfHeaderName: null, //Remove the X-CSRF-TOKEN header from the instance
+})
+
+reqInstance.interceptors.request.use(function (config) {
+  // Do something before request is sent
+  console.log(config)
+  return config;
+}, function (error) {
+  // Do something with request error
+  return Promise.reject(error);
+})
+
 export default class LoginButton extends React.Component {
 
   constructor(props) {
@@ -49,6 +69,46 @@ export default class LoginButton extends React.Component {
       },
     }
     console.log('start request...')
+    // reqInstance.post('http://k8s.comismart.com/auth/rest/token', postData, requestConfig)
+    // .then(response => {
+    //   console.log('finish request.')
+    //   return response.data
+    // })
+    // .then((json) => {
+    //   console.log(json)
+    //   this.setState({ login: true })
+    // })
+    // .catch((error) => {
+    //   // Do something with the error object
+    //   // If without this callback, you could probably get 'TypeError: failed to fetch' error when make request after a failed request
+    //   console.log(error)
+    // })
+
+    //Using native XMLHttpRequest Object
+    // const { xmlhttp } = this.state
+    // xmlhttp.onload = (e) => {
+    //   // console.log('this.readyState = '+this.sreadyState)
+    //   // console.log('this.status = '+this.status)
+    //   if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+    //     console.log('request success!')
+    //     console.log(xmlhttp.responseText)
+    //     // document.getElementById("demo").innerHTML = this.responseText;
+    //   } else if (xmlhttp.readyState == 4 && xmlhttp.status == 201) {
+    //     console.log('request success and a new resource has been created!')
+    //     // console.log(xmlhttp.responseText)
+    //     var res = JSON.parse(xmlhttp.responseText)
+    //     console.table(res)
+    //     this.setState({ login: true })
+    //     // document.getElementById("demo").innerHTML = this.responseText;
+    //   }
+    // }
+    // // xmlhttp.open("GET", "http://flora.iro.ntnu.edu.tw/api/getReport/51", true)
+    // // xmlhttp.send()
+
+    // xmlhttp.open("POST", "http://k8s.comismart.com/auth/rest/token", true)
+    // xmlhttp.setRequestHeader("Accept", "application/json")
+    // xmlhttp.setRequestHeader("Content-type", "application/json")
+    // xmlhttp.send(postData)
 
     //Using fetch method
     fetch("http://k8s.comismart.com/auth/rest/token", {
@@ -66,8 +126,103 @@ export default class LoginButton extends React.Component {
       let myRefreshToken = response.refreshToken
       this.setState({ accessToken: myAccessToken, refreshToken: myRefreshToken })
       this.getDeviceInfoAndData(myAccessToken, myRefreshToken)
+      // this.props.setTokens(myAccessToken, myRefreshToken)
+      // requestConfig.headers.Authorization = 'Bearer ' + myAccessToken
+      // console.table(requestConfig.headers)
+      // fetch("http://k8s.comismart.com:80/api/rest/device/e50d6085-2aba-48e9-b1c3-73c673e414be", {
+      //   method: 'GET', // or 'PUT'
+      //   headers: requestConfig.headers
+      // }).then(res => {
+      //   // console.log(res)
+      //   return res.json()
+      // })
+      // .then(device => {
+      //   console.log('Success getting device info:', device)
+      //   let info = 'Device Information'
+      //   this.props.updateDeviceInfo(info, device)
+      //   //Create a websocket and listening to server
+      //   let mySocket = new WebSocket('ws://k8s.comismart.com/api/websocket')
+      //   // console.log(mySocket)
+      //   this.props.setWebsocket(mySocket)
+      //   mySocket.onopen = function(e) {
+      //     console.log('Connected to the websocket server')
+      //     console.log(e.code)
+      //     // console.log('myAccessToken = '+myAccessToken)
+      //     let sendData = JSON.stringify({
+      //       action: 'authenticate',
+      //       token: myAccessToken,
+      //     })
+      //     mySocket.send(sendData)
+      //     sendData = JSON.stringify({
+      //       action: 'notification/subscribe',
+      //       deviceId: device.id,
+      //       names:  ['measurement'],
+      //     })
+      //     mySocket.send(sendData)
+      //   }
+      //   mySocket.onmessage = function(e) {
+      //     console.log('Receiving message from the websocket server')
+      //     let data = JSON.parse(e.data)
+      //     // console.log(data)
+      //     if (data.action.indexOf('insert') != -1) {
+      //       console.log('Updating the measure data...')
+      //       //Updating the measure data
+      //       // this.props.updateMeasureData(data.notification)
+      //     }
+      //   }.bind(this) //Bind the Main class object to the closure
+      //   mySocket.onclose = function(e) {
+      //     console.log('Disconnected to the websocket server')
+      //     console.log(e.code)
+      //   }
+      //   mySocket.onerror = function(e) {
+      //     console.log('ERROR from the websocket server:')
+      //     console.log(e.code)
+      //   }
+      // })
+      // .catch(error => console.error('Error on getting device info:', error))
     })
     .catch(error => console.error('Error on getting accessToken & refreshToken:', error))
+  }
+
+  getLiveMeasureData = device => {
+    //Create a websocket and listening to server
+    let mySocket = new WebSocket('ws://k8s.comismart.com/api/websocket')
+    // console.log(mySocket)
+    this.props.setWebsocket(mySocket)
+    mySocket.onopen = function(e) {
+      console.log('Connected to the websocket server')
+      console.log(e.code)
+      // console.log('myAccessToken = '+myAccessToken)
+      let sendData = JSON.stringify({
+        action: 'authenticate',
+        token: accessToken,
+      })
+      mySocket.send(sendData)
+      sendData = JSON.stringify({
+        action: 'notification/subscribe',
+        deviceId: device.id,
+        names:  ['measurement'],
+      })
+      mySocket.send(sendData)
+    }
+    mySocket.onmessage = function(e) {
+      console.log('Receiving message from the websocket server')
+      let data = JSON.parse(e.data)
+      if (data.action.indexOf('insert') != -1) {
+        console.log('Updating the measure data...')
+        console.log(data)
+        //Updating the measure data
+        this.props.updateMeasureData(data.notification)
+      }
+    }.bind(this) //Bind the Main class object to the closure
+    mySocket.onclose = function(e) {
+      console.log('Disconnected to the websocket server')
+      console.log(e.code)
+    }
+    mySocket.onerror = function(e) {
+      console.log('ERROR from the websocket server:')
+      console.log(e.code)
+    }
   }
 
   getDeviceInfoAndData = (myAccessToken, myRefreshToken) => {
@@ -97,45 +252,8 @@ export default class LoginButton extends React.Component {
         this.getRefershDeviceInfoAndData(refreshToken)
       } else {
         let info = 'Device Information'
-        this.props.handleDeviceInfo(info, device)
-        //Create a websocket and listening to server
-        let mySocket = new WebSocket('ws://k8s.comismart.com/api/websocket')
-        // console.log(mySocket)
-        this.props.setWebsocket(mySocket)
-        mySocket.onopen = function(e) {
-          console.log('Connected to the websocket server')
-          console.log(e.code)
-          // console.log('myAccessToken = '+myAccessToken)
-          let sendData = JSON.stringify({
-            action: 'authenticate',
-            token: accessToken,
-          })
-          mySocket.send(sendData)
-          sendData = JSON.stringify({
-            action: 'notification/subscribe',
-            deviceId: device.id,
-            names:  ['measurement'],
-          })
-          mySocket.send(sendData)
-        }
-        mySocket.onmessage = function(e) {
-          console.log('Receiving message from the websocket server')
-          let data = JSON.parse(e.data)
-          if (data.action.indexOf('insert') != -1) {
-            console.log('Updating the measure data...')
-            console.log(data)
-            //Updating the measure data
-            this.props.updateMeasureData(data.notification)
-          }
-        }.bind(this) //Bind the Main class object to the closure
-        mySocket.onclose = function(e) {
-          console.log('Disconnected to the websocket server')
-          console.log(e.code)
-        }
-        mySocket.onerror = function(e) {
-          console.log('ERROR from the websocket server:')
-          console.log(e.code)
-        }
+        this.props.updateDeviceInfo(info, device)
+        this.getLiveMeasureData(device)
       }
     })
     .catch(error => console.error('Error on getting device info:', error))
@@ -175,45 +293,8 @@ export default class LoginButton extends React.Component {
       .then(device => {
         console.log('Success getting device info:', device)
         let info = 'Device Information'
-        this.props.handleDeviceInfo(info, device)
-        //Create a websocket and listening to server
-        let mySocket = new WebSocket('ws://k8s.comismart.com/api/websocket')
-        // console.log(mySocket)
-        this.props.setWebsocket(mySocket)
-        mySocket.onopen = function(e) {
-          console.log('Connected to the websocket server')
-          console.log(e.code)
-          // console.log('myAccessToken = '+myAccessToken)
-          let sendData = JSON.stringify({
-            action: 'authenticate',
-            token: myAccessToken,
-          })
-          mySocket.send(sendData)
-          sendData = JSON.stringify({
-            action: 'notification/subscribe',
-            deviceId: device.id,
-            names:  ['measurement'],
-          })
-          mySocket.send(sendData)
-        }
-        mySocket.onmessage = function(e) {
-          console.log('Receiving message from the websocket server')
-          let data = JSON.parse(e.data)
-          if (data.action.indexOf('insert') != -1) {
-            console.log('Updating the measure data...')
-            console.log(data)
-            //Updating the measure data
-            this.props.updateMeasureData(data.notification)
-          }
-        }.bind(this) //Bind the Main class object to the closure
-        mySocket.onclose = function(e) {
-          console.log('Disconnected to the websocket server')
-          console.log(e.code)
-        }
-        mySocket.onerror = function(e) {
-          console.log('ERROR from the websocket server:')
-          console.log(e.code)
-        }
+        this.props.updateDeviceInfo(info, device)
+        this.getLiveMeasureData(device)
       })
       .catch(error => console.error('Error on getting device info:', error))
     })
@@ -222,8 +303,8 @@ export default class LoginButton extends React.Component {
 
   doStop = () => {
     console.log('doStop...')
-    let info = 'Press the RESUME to continue getting the device info and data, thanks!'
-    this.props.handleDeviceInfo(info, {})
+    let info = 'Press the RESUME to continue getting the device info and data, Thanks!'
+    this.props.updateDeviceInfo(info, {})
     this.props.closeWebsocket()
     this.setState({ stop: true })
   }
@@ -231,8 +312,8 @@ export default class LoginButton extends React.Component {
   doLogout = () => {
     console.log('doLogout...')
     this.setState({ login: false })
-    let info = 'Please login to get the device info and data, thanks!'
-    this.props.handleDeviceInfo(info, {})
+    let info = 'Please login to get device info and data, Thanks!'
+    this.props.updateDeviceInfo(info, {})
     this.props.clearMeasureData()
     this.props.closeWebsocket()
   }
@@ -247,7 +328,7 @@ export default class LoginButton extends React.Component {
     } else {
       return (
         <div>
-          <Button color="inherit" onClick={this.doStop}>STOP</Button>
+          <Button color="inherit" onClick={this.doStop}>Stop</Button>
         </div>
       )
     }
