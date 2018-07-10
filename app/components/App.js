@@ -116,6 +116,22 @@ export default class App extends React.Component {
     console.log('closeWebsocket...')
     if (this.state.websocket) this.state.websocket.close()
   }
+  
+  clearMeasureData = () => {
+    console.log('clearMeasureData...')
+    let { measureData } = this.state
+    measureData = update(measureData, {
+      datasets: [
+        {
+          data: {$set: []}
+        },
+        {
+          data: {$set: []}
+        }
+      ]
+    })
+    this.setState({ measureData })
+  }
 
   updateMeasureData = (data) => {
     console.log('updateMeasureData...')
@@ -164,6 +180,7 @@ export default class App extends React.Component {
           setTokens={this.createTokens}
           handleDeviceInfo={this.changeDeviceInfo} 
           closeWebsocket={this.closeWebsocket}
+          clearMeasureData={this.clearMeasureData}
           updateMeasureData={this.updateMeasureData}/>
         </div>
         <hr></hr>
