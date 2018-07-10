@@ -155,6 +155,7 @@ export default class App extends React.Component {
       this.closeWebsocket()
       const msg = 'Prevent the data from growing too large, this is just for basic demo'
       this.handleNotifyOpen(msg, 6000)
+      this.clearMeasureData()
     } else {
       this.setState({ measureData })
     }
